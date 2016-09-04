@@ -92,7 +92,7 @@ func renameSubs(dirpath, videoext, subext string) {
 		res := rgx.FindString(f.Name())
 		if res != "" {
 			title := videos[res]
-			err = os.Rename(dirpath+dirtools.Separator+f.Name(), dirpath+dirtools.Separator+title)
+			err = os.Rename(dirpath+dirtools.Separator+f.Name(), dirpath+dirtools.Separator+title+subext)
 
 			if err != nil {
 				fmt.Println(err)
