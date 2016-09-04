@@ -35,8 +35,6 @@ func CreateDirWithFiles(nbr int, filename, extension, dirpath string) (string, e
 
 // Dircheck will check if a file exists and is a directory
 func Dircheck(path string) (bool, error) {
-	fmt.Println("Checking path :" + path)
-
 	// check if the path exist
 	src, err := os.Stat(path)
 	if err != nil {

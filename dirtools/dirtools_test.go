@@ -9,6 +9,7 @@ import (
 
 const Filename = "filename"
 
+// TestDirCheck tests behavior when there is no directory
 func TestNotExist(t *testing.T) {
 	badpath := "notachance"
 	boolean, err := Dircheck(badpath)
@@ -17,6 +18,7 @@ func TestNotExist(t *testing.T) {
 	}
 }
 
+// TestDirCheck tests behavior when the path points to a file
 func TestNotADir(t *testing.T) {
 	file, err := ioutil.TempFile(os.TempDir(), "sometempfile")
 	filename := file.Name()
@@ -33,6 +35,7 @@ func TestNotADir(t *testing.T) {
 	}
 }
 
+// TestDirCheck tests correct verification of a directory
 func TestDirCheck(t *testing.T) {
 	boolean, err := Dircheck(os.TempDir())
 	if boolean != true || err != nil {
@@ -40,6 +43,7 @@ func TestDirCheck(t *testing.T) {
 	}
 }
 
+// TestCountFilesWithExt tests correct count of files for a specific extension
 func TestCountFilesWithExt(t *testing.T) {
 	dirpath, err := CreateDirWithFiles(10, Filename, Avi, "")
 	if err != nil {
@@ -56,6 +60,7 @@ func TestCountFilesWithExt(t *testing.T) {
 	}
 }
 
+// TestGetFiles tests correct retrieval of files
 func TestGetFiles(t *testing.T) {
 	dirpath, err := CreateDirWithFiles(12, Filename, Avi, "")
 	if err != nil {
@@ -70,6 +75,7 @@ func TestGetFiles(t *testing.T) {
 	}
 }
 
+// TestCopyExtFiles tests correct copy of files
 func TestCopyExtFiles(t *testing.T) {
 	dirpath, err := CreateDirWithFiles(12, Filename, Srt, "")
 	if err != nil {
