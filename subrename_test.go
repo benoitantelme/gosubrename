@@ -101,3 +101,22 @@ func TestRenameNoVideoFiles(t *testing.T) {
 		}
 	}
 }
+
+// TestGetEpisodeNumber tests regex for common subtitles
+func TestGetEpisodeNumber(t *testing.T) {
+	rgx := regexp.MustCompile(Pattern)
+	res := getEpisodeNumber("aaaa e01 aaaa", rgx)
+	if res != "e01" {
+		t.Error("Issue while matching simple title")
+	}
+
+	res = getEpisodeNumber("aaaa s01 e02aaaa", rgx)
+	if res != "e02" {
+		t.Error("Issue while matching: aaaa s01 e02aaaa")
+	}
+
+	res = getEpisodeNumber("Mr. Robot S01E02 HDTV 720p x265 AAC E-Subs [GWC].avi", rgx)
+	if res != "E02" {
+		t.Error("Issue while matching: aaaa s01 e02aaaa")
+	}
+}

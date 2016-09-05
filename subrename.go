@@ -1,12 +1,15 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"gosubrename/dirtools"
 	"os"
 	"path/filepath"
 	"regexp"
 )
+
+const Pattern = "[Ee]\\d+"
 
 func main() {
 	argsWithoutProg := os.Args[1:]
@@ -39,25 +42,10 @@ func main() {
 // RenameSubs check .avi and .srt files in a directory
 // if the subtitles names are not inline with the video names, they are changed accordingly
 func renameSubs(dirpath, videoext, subext string) {
-	//taking extension parameters into account
-	if videoext == "" {
-		videoext = dirtools.Avi
-	}
-	if subext == "" {
-		subext = dirtools.Srt
-	}
-
-	fmt.Printf("Renaming subtitles for extensions %s and %s\n", videoext, subext)
-
-	avifiles, err := dirtools.GetFiles(dirpath, videoext)
-	if len(avifiles) < 1 {
-		fmt.Printf("No video files found for extension %s\n", videoext)
-		return
-	}
-
-	srtfiles, err := dirtools.GetFiles(dirpath, subext)
-	if len(avifiles) < 1 {
-		fmt.Printf("No subtitles found for extension %s\n", subext)
+	videoext, subext = initialiseExtensions(videoext, subext)
+	avifiles, srtfiles, err := initialiseFiles(dirpath, videoext, subext)
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -74,11 +62,11 @@ func renameSubs(dirpath, videoext, subext string) {
 
 	// initialize map from episode number to videos titles
 	fmt.Println("Creating map of video titles")
-	rgx := regexp.MustCompile("\\d+")
+	rgx := regexp.MustCompile(Pattern)
 	videos := make(map[string]string)
 	for _, f := range avifiles {
 		filename := f.Name()
-		res := rgx.FindString(filename)
+		res := getEpisodeNumber(filename, rgx)
 		if res != "" {
 			var extension = filepath.Ext(filename)
 			var name = filename[0 : len(filename)-len(extension)]
@@ -89,7 +77,7 @@ func renameSubs(dirpath, videoext, subext string) {
 	// replace the srt title by the avi title
 	fmt.Println("Renaming wrong subtitles")
 	for _, f := range srtfiles {
-		res := rgx.FindString(f.Name())
+		res := getEpisodeNumber(f.Name(), rgx)
 		if res != "" {
 			title := videos[res]
 			err = os.Rename(dirpath+dirtools.Separator+f.Name(), dirpath+dirtools.Separator+title+subext)
@@ -101,6 +89,47 @@ func renameSubs(dirpath, videoext, subext string) {
 		}
 	}
 
+}
+
+// initialiseExtensions takes extension parameter into account of provide default extensions
+func initialiseExtensions(videoext, subext string) (string, string) {
+	if videoext == "" {
+		videoext = dirtools.Avi
+	}
+	if subext == "" {
+		subext = dirtools.Srt
+	}
+
+	fmt.Printf("Renaming subtitles for extensions %s and %s\n", videoext, subext)
+
+	return videoext, subext
+}
+
+// initialiseFiles check that there are videos and subtitles files and return them
+func initialiseFiles(dirpath, videoext, subext string) ([]os.FileInfo, []os.FileInfo, error) {
+	avifiles, err := dirtools.GetFiles(dirpath, videoext)
+	if err != nil {
+		return nil, nil, err
+	} else if len(avifiles) < 1 {
+		fmt.Printf("No video files found for extension %s\n", videoext)
+		return nil, nil, errors.New("No video files found for extension " + videoext)
+	}
+
+	srtfiles, err := dirtools.GetFiles(dirpath, subext)
+	if err != nil {
+		return nil, nil, err
+	} else if len(avifiles) < 1 {
+		fmt.Printf("No subtitles found for extension %s\n", subext)
+		return nil, nil, errors.New("No subtitles files found for extension " + subext)
+	}
+
+	return avifiles, srtfiles, nil
+}
+
+// getEpisodeNumber tries to find a string using a regex in a filename and returns the result
+// used separately to be unit tested
+func getEpisodeNumber(filename string, regex *regexp.Regexp) string {
+	return regex.FindString(filename)
 }
 
 // Help prints a helper message for the command line usage
